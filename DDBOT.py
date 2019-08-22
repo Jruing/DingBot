@@ -118,4 +118,4 @@ class DDbot():
 
 if __name__ == '__main__':
     dd = DDbot(
-        webhook="https://oapi.dingtalk.com/robot/send?access_token=411155d7f69a0a5250c8c1b34a22130e0b836ab5de4769e367ff142d153b387e")
+        webhook="https://oapi.dingtalk.com/robot/send?access_token=xxxxxx")
