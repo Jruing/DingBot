@@ -1,121 +1,151 @@
-# encoding:utf-8
-import requests
+#!/usr/bin/python
+# -*- coding: UTF-8 -*-
+
+'''
+    @@@@@@@@     @@@@@@@@@     @@@@@@@@@    @@@@@@@@@     @@@@@@@@@@@@
+    @@      @@   @@      @@    @@     @@    @@      @@         @@
+    @@       @@  @@       @@   @@    @@    @@        @@        @@
+    @@       @@  @@       @@   @@   @@     @@        @@        @@
+    @@       @@  @@       @@   @@  @@      @@        @@        @@
+    @@      @@   @@      @@    @@ @@       @@        @@        @@
+    @@     @@    @@     @@     @@  @@      @@        @@        @@
+    @@    @@     @@    @@      @@   @@     @@        @@        @@
+    @@   @@      @@   @@       @@  @@       @@      @@         @@
+    @@ @@        @@ @@         @@           @@@@@@@@@          @@
+
+'''
+
+import requests, json
 
 
-class DDbot():
-    def __init__(self, webhook: str):
+class DingDing():
+    """
+    Refer to official documentation: https://ding-doc.dingtalk.com/doc#/serverapi2/qf2nxq
+    """
+
+    def __init__(self, webhook):
         self.webhook = webhook
-        self.header = {
-            "user-agent": "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.108 Safari/537.36",
-            "Content-Type": "application/json"
-        }
+        self.session = requests.session()
+        self.session.headers = {"Content-Type": "application/json;charset=utf-8"}
 
-    # Send text message
-    def Send_Text_Msg(self, Msg: str, AtMobiles: list = None, AtAll: bool = False) -> dict:
+    def Send_Text_Msg(self, Content: str, atMobiles: list = [], isAtAll: bool = False) -> dict:
         """
-        :param Msg: 发送的文本消息
-        :param AtMobiles: @需要注意此消息的用户手机号 单个用户格式'13888888888'，多个用户格式['13888888888','13999999999']
-        :param AtAll: @全体成员
+        :param content: Text message to send
+        :param atMobiles: contact list:Must be a mobile phone number
+        :param isAtAll: @All members
         :return:
         """
         try:
-            message = {
+            data = {
                 "msgtype": "text",
                 "text": {
-                    "content": Msg
+                    "content": Content
                 },
                 "at": {
-                    "atMobiles": [[Mobiles for Mobiles in AtMobiles] if isinstance(AtMobiles, list) else AtMobiles][0],
-                    "isAtAll": AtAll
+                    "atMobiles": atMobiles,
+                    "isAtAll": isAtAll
                 }
             }
-            response = requests.post(url=self.webhook, json=message, headers=self.header)
-            return {"Status": response.status_code, "Msg": message}
+            response = self.session.post(self.webhook, data=json.dumps(data))
+            if response.status_code == '200':
+                result = {"status": True, "message": "Message has been sent"}
+                return result
+            else:
+                return response.text
         except Exception as error:
-            raise Exception(error)
+            result = {"status": False, "message": f"Failed to send message,Error stack:{error}"}
+            return result
 
-    # LinkMessage
-    def Send_Link_Msg(self, Title: str, Text: str, MessageUrl: str, PicUrl: str = None) -> dict:
+    def Send_Link_Msg(self, Content: str, Title: str, MsgUrl: str, PicUrl: str = ''):
         """
-        :param Title: 标题
-        :param Text: 内容
-        :param MessageUrl: 文章url
-        :param PicUrl: 图片url 可为空
+        :param Content: Summary of this link
+        :param title: The title of this link
+        :param MsgUrl: The target url to be redirected
+        :param PicUrl: Picture of this link
         :return:
         """
         try:
-            message = {
+            data = {
                 "msgtype": "link",
                 "link": {
-                    "text": Text,
+                    "text": Content,
                     "title": Title,
                     "picUrl": PicUrl,
-                    "messageUrl": MessageUrl
+                    "messageUrl": MsgUrl
                 }
             }
-            response = requests.post(url=self.webhook, json=message, headers=self.header)
-            return {"Status": response.status_code, "Msg": message}
+            response = self.session.post(self.webhook, data=json.dumps(data))
+            if response.status_code == '200':
+                result = {"status": True, "message": "Message has been sent"}
+                return result
+            else:
+                return response.text
         except Exception as error:
-            raise Exception(error)
+            result = {"status": False, "message": f"Failed to send message,Error stack:{error}"}
+            return result
 
-    # MarkDown
-    def Send_MD_Msg(self, Title: str, Text: str, AtMobiles: list = None, AtAll: bool = False) -> dict:
+    def Send_MardDown_Msg(self, Content: str, Title: str, atMobiles: list = [], isAtAll: bool = False):
         """
-        :param Title: 标题
-        :param Text: 内容
-        :param AtMobiles:  @需要注意此消息的用户手机号 单个用户格式'13888888888'，多个用户格式['13888888888','13999999999']
-        :param AtAll: @全体成员
+        :param Content: markdown formatted text
+        '''
+        标题
+            # 一级标题
+            ## 二级标题
+            ### 三级标题
+            #### 四级标题
+            ##### 五级标题
+            ###### 六级标题
+
+            引用
+            > A man who stands for nothing will fall for anything.
+
+            文字加粗、斜体
+            **bold**
+            *italic*
+
+            链接
+            [this is a link](http://name.com)
+
+            图片
+            ![](http://name.com/pic.jpg)
+
+            无序列表
+            - item1
+            - item2
+
+            有序列表
+            1. item1
+            2. item2
+        '''
+        :param Title: The title of this link
+        :param atMobiles: contact list:Must be a mobile phone number
+        :param isAtAll: @All members
         :return:
         """
         try:
-            message = {
+            data = {
                 "msgtype": "markdown",
                 "markdown": {
                     "title": Title,
-                    "text": Text
+                    "text": Content
                 },
                 "at": {
-                    "atMobiles": [[Mobiles for Mobiles in AtMobiles] if isinstance(AtMobiles, list) else AtMobiles][0],
-                    "isAtAll": AtAll
+                    "atMobiles": atMobiles,
+                    "isAtAll": isAtAll
                 }
             }
-            response = requests.post(url=self.webhook, json=message, headers=self.header)
-            return {"Status": response.status_code, "Msg": message}
+            response = self.session.post(self.webhook, data=json.dumps(data))
+            if response.status_code == '200':
+                result = {"status": True, "message": "Message has been sent"}
+                return result
+            else:
+                return response.text
         except Exception as error:
-            raise Exception(error)
+            result = {"status": False, "message": f"Failed to send message,Error stack:{error}"}
+            return result
 
-    # FeedCard类型
-    def Send_FeedCard(self, Title: str, MessageUrl: str, PicUrl: str)->dict:
-        """
-        :param Title: 标题
-        :param MessageUrl: 消息url
-        :param PicUrl: 图片url
-        :return:
-        """
-        if isinstance(Title, str) and isinstance(PicUrl, str) and isinstance(MessageUrl, str):
-            message = {
-                "feedCard": {
-                    "links": [
-                        {
-                            "title": Title,
-                            "messageURL": MessageUrl,
-                            "picURL": PicUrl
-                        }
-                    ]
-                },
-                "msgtype": "feedCard"
-            }
-        elif isinstance(Title, list) and isinstance(PicUrl, list) and isinstance(MessageUrl, list):
-            message = {
-                "feedCard": {
-                    "links": [{"title": t, "messageURL": m, "picURL": p} for t, m, p in zip(Title, MessageUrl, PicUrl)]
-                },
-                "msgtype": "feedCard"
-            }
-        response = requests.post(url=self.webhook, json=message, headers=self.header)
-        print(response.text)
-
-
-if __name__ == '__main__':
-    dd = DDbot(
-        webhook="https://oapi.dingtalk.com/robot/send?access_token=xxxxxx")
+from DingDingBot.DDBOT import DingDing
+# dd = DingDing(webhook='https://oapi.dingtalk.com/robot/send?access_token=xxxxxxxx')
+# print(dd.Send_Text_Msg(Content='test:测试数据'))
+# print(dd.Send_Link_Msg(Content='test',Title='测试数据',MsgUrl='https://www.baidu.com',PicUrl='https://cn.bing.com/images/search?q=outgoing%e6%9c%ba%e5%99%a8%e4%ba%ba&id=FEE700371845D9386738AAAA51DCC43DC54911AA&FORM=IQFRBA'))
+# print(dd.Send_MardDown_Msg(Content="# 测试数据\n" + "> testone", Title='测试数据'))
