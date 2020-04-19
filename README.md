@@ -1,6 +1,6 @@
 # DingBot
 DingDing robot interface
-#Python第三方包之DingDingBot
+
 这个是作者自己封装的一个钉钉机器人的包，目前只支持发文本格式、链接格式、markdown格式的消息,我们可以在很多场景用到这个，比如告警通知等
 ## 安装
 > pip install DingDingBot
